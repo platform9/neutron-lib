@@ -60,6 +60,10 @@ class ContextBase(oslo_context.RequestContext):
         self.user_name = user_name
         self.timestamp = timestamp or timeutils.utcnow()
         self._is_advsvc = is_advsvc
+        self.watchman_rego_allowed: bool = False
+        self.watchman_build_sql_filter = None
+        self.watchman_sql_filter_ctx = None
+
         if self._is_advsvc is None:
             self._is_advsvc = (self.is_admin or
                                policy_engine.check_is_advsvc(self))
@@ -110,6 +114,8 @@ class ContextBase(oslo_context.RequestContext):
             'tenant_name': self.project_name,
             'project_name': self.project_name,
             'user_name': self.user_name,
+            'watchman_rego_allowed': self.watchman_rego_allowed,
+            'watchman_sql_filter_ctx': self.watchman_sql_filter_ctx,
         })
         return context
 
@@ -141,6 +147,8 @@ class ContextBase(oslo_context.RequestContext):
         cls_obj.user_id = values.get('user_id', values.get('user'))
         cls_obj.tenant_id = values.get('tenant_id', values.get('project_id'))
         cls_obj.tenant_name = values.get('tenant_name')
+        cls_obj.watchman_rego_allowed = values.get('watchman_rego_allowed', False)
+        cls_obj.watchman_sql_filter_ctx = values.get('watchman_sql_filter_ctx', None)
         return cls_obj
 
     def elevated(self):
@@ -151,6 +159,10 @@ class ContextBase(oslo_context.RequestContext):
         context.roles = list(
             set(context.roles) | {'admin', 'member', 'reader'}
         )
+
+        context.watchman_rego_allowed = False
+        context.watchman_build_sql_filter = None
+        context.watchman_sql_filter_ctx = None
 
         return context
 

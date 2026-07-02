@@ -180,9 +180,10 @@ def model_query_scope_is_project(context, model):
         # For context which has 'advanced-service' rights the
         # query will not be scoped to a single project_id
         return False
-    # Unless context has 'global' access the
-    # resources from the database query will be scoped to a single project_id
-    # context with 'admin' rights is treated as it has global access always.
+    if getattr(context, 'watchman_rego_allowed', False):
+        return False
+    # Unless context has 'admin' rights the
+    # query will be scoped to a single project_id
     return not context.has_global_access
 
 

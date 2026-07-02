@@ -23,6 +23,8 @@ from neutron_lib import exceptions
 
 
 def _validate_privileges(context, res_dict):
+    if getattr(context, 'watchman_gatekeeper_authoritative', False):
+        return
     if ('project_id' in res_dict and
             res_dict['project_id'] != context.project_id and
             not (context.is_admin or context.is_service_role)):

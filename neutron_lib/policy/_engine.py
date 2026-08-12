@@ -75,10 +75,19 @@ def init(conf=cfg.CONF, policy_file=None):
         _ROLE_ENFORCER.load_rules(True)
 
 
+# Set by the service to route computed policy to its rego engine. Takes
+# (rule, credentials) and returns a bool, or None to let oslo.policy decide.
+rego_hook = None
+
+
 def _check_rule(context, rule):
     init()
     # the target is user-self
     credentials = context.to_policy_values()
+    if rego_hook is not None:
+        result = rego_hook(rule, credentials)
+        if result is not None:
+            return result
     try:
         return _ROLE_ENFORCER.authorize(rule, credentials, credentials)
     except policy.PolicyNotRegistered:

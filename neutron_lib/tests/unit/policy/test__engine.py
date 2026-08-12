@@ -96,3 +96,15 @@ class TestPolicyEnforcer(base.BaseTestCase):
         policy_engine.init(policy_file='no_policy.yaml')
         ctx = context.Context('me', 'my_project', roles=['service'])
         self.assertTrue(policy_engine.check_is_service_role(ctx))
+
+    def test_rego_hook_overrides_oslo_policy(self):
+        self.addCleanup(setattr, policy_engine, 'rego_hook', None)
+        policy_engine.rego_hook = lambda rule, creds: True
+        ctx = context.Context('me', 'my_project', roles=['member'])
+        self.assertTrue(policy_engine.check_is_admin(ctx))
+
+    def test_rego_hook_returning_none_defers_to_oslo_policy(self):
+        self.addCleanup(setattr, policy_engine, 'rego_hook', None)
+        policy_engine.rego_hook = lambda rule, creds: None
+        ctx = context.Context('me', 'my_project', roles=['member'])
+        self.assertFalse(policy_engine.check_is_admin(ctx))

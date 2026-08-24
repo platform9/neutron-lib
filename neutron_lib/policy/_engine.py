@@ -75,10 +75,9 @@ def init(conf=cfg.CONF, policy_file=None):
         _ROLE_ENFORCER.load_rules(True)
 
 
-# Set by the service to route server-side computed policy to its own engine.
-# Takes (rule, credentials) and returns a bool, or None to defer to
-# oslo.policy. These rules resolve on _ROLE_ENFORCER, which the service does
-# not own, so the seam has to live here.
+# Set by the service to route computed policy to its own engine. Takes
+# (rule, credentials) and returns a bool, or None to defer to oslo.policy.
+# These rules resolve on _ROLE_ENFORCER, which the service does not own.
 rego_hook = None
 
 

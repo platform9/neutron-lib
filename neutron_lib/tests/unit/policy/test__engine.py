@@ -49,6 +49,24 @@ class TestPolicyEnforcer(base.BaseTestCase):
         ctx = context.Context('me', 'my_project', roles=['user']).elevated()
         self.assertTrue(policy_engine.check_is_admin(ctx))
 
+    def test_rego_hook_overrides_oslo_policy(self):
+        self.addCleanup(setattr, policy_engine, 'rego_hook', None)
+        policy_engine.rego_hook = lambda rule, creds: True
+        ctx = context.Context('me', 'my_project', roles=['member'])
+        self.assertTrue(policy_engine.check_is_admin(ctx))
+
+    def test_rego_hook_returning_none_defers_to_oslo_policy(self):
+        self.addCleanup(setattr, policy_engine, 'rego_hook', None)
+        policy_engine.rego_hook = lambda rule, creds: None
+        ctx = context.Context('me', 'my_project', roles=['member'])
+        self.assertFalse(policy_engine.check_is_admin(ctx))
+
+    def test_rego_hook_can_deny(self):
+        self.addCleanup(setattr, policy_engine, 'rego_hook', None)
+        policy_engine.rego_hook = lambda rule, creds: False
+        ctx = context.Context('me', 'my_project', roles=['admin'])
+        self.assertFalse(policy_engine.check_is_admin(ctx))
+
     def test_check_is_advsvc_role(self):
         ctx = context.Context('me', 'my_project', roles=['advsvc'])
         self.assertTrue(policy_engine.check_is_advsvc(ctx))
